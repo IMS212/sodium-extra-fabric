@@ -1,21 +1,23 @@
 package me.flashyreese.mods.sodiumextra.mixin.optimizations.beacon_beam_rendering;
 
-import me.flashyreese.mods.sodiumextra.common.util.ColorRGBA;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import me.flashyreese.mods.sodiumextra.compat.IrisCompat;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
-import net.minecraft.block.entity.BeaconBlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.*;
-import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BeaconRenderer;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.phys.AABB;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
@@ -25,15 +27,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = BeaconBlockEntityRenderer.class, priority = 1500)
-public abstract class MixinBeaconBlockEntityRenderer {
+@Mixin(value = BeaconRenderer.class, priority = 1500)
+public abstract class MixinBeaconRenderer {
 
     /**
      * @author FlashyReese
      * @reason Use optimized vertex writer, also avoids unnecessary allocations
      */
-    @Inject(method = "renderBeam(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/util/Identifier;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
-    private static void optimizeRenderBeam(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, Identifier textureId, float tickDelta, float heightScale, long worldTime, int yOffset, int maxY, int color, float innerRadius, float outerRadius, CallbackInfo ci) {
+    @Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/ResourceLocation;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
+    private static void optimizeRenderBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, ResourceLocation resourceLocation, float tickDelta, float heightScale, long worldTime, int yOffset, int maxY, int color, float innerRadius, float outerRadius, CallbackInfo ci) {
         ci.cancel();
         if (IrisCompat.isIrisPresent()) {
             if (IrisCompat.isRenderingShadowPass()) {
@@ -42,13 +44,13 @@ public abstract class MixinBeaconBlockEntityRenderer {
         }
 
         int height = yOffset + maxY;
-        matrices.push();
-        matrices.translate(0.5, 0.0, 0.5);
+        poseStack.pushPose();
+        poseStack.translate(0.5, 0.0, 0.5);
         float time = (float) Math.floorMod(worldTime, 40) + tickDelta;
         float negativeTime = maxY < 0 ? time : -time;
-        float fractionalPart = MathHelper.fractionalPart(negativeTime * 0.2F - (float) MathHelper.floor(negativeTime * 0.1F));
-        matrices.push();
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(time * 2.25F - 45.0F));
+        float fractionalPart = Mth.frac(negativeTime * 0.2F - (float) Mth.floor(negativeTime * 0.1F));
+        poseStack.pushPose();
+        poseStack.mulPose(Axis.YP.rotationDegrees(time * 2.25F - 45.0F));
         float innerX1;
         float innerZ2;
         float innerX3 = -innerRadius;
@@ -60,10 +62,10 @@ public abstract class MixinBeaconBlockEntityRenderer {
             long buffer = stack.nmalloc(2 * 16 * ModelVertex.STRIDE);
             long ptr = buffer;
             // Note: ModelVertex color takes in ABGR
-            ptr = writeBeamLayerVertices(ptr, matrices, ColorARGB.toABGR(color), yOffset, height, 0.0F, innerRadius, innerRadius, 0.0F, innerX3, 0.0F, 0.0F, innerZ4, innerV1, innerV2);
-            VertexBufferWriter.of(vertexConsumerProvider.getBuffer(RenderLayer.getBeaconBeam(textureId, false))).push(stack, buffer, 16, ModelVertex.FORMAT);
+            ptr = writeBeamLayerVertices(ptr, poseStack, ColorARGB.toABGR(color), yOffset, height, 0.0F, innerRadius, innerRadius, 0.0F, innerX3, 0.0F, 0.0F, innerZ4, innerV1, innerV2);
+            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(resourceLocation, false))).push(stack, buffer, 16, ModelVertex.FORMAT);
 
-            matrices.pop();
+            poseStack.popPose();
             innerX1 = -outerRadius;
             float outerZ1 = -outerRadius;
             innerZ2 = -outerRadius;
@@ -72,17 +74,17 @@ public abstract class MixinBeaconBlockEntityRenderer {
             innerV1 = (float) maxY * heightScale + innerV2;
 
             buffer = ptr;
-            ptr = writeBeamLayerVertices(ptr, matrices, ColorARGB.toABGR(color, 32), yOffset, height, innerX1, outerZ1, outerRadius, innerZ2, innerX3, outerRadius, outerRadius, outerRadius, innerV1, innerV2);
-            VertexBufferWriter.of(vertexConsumerProvider.getBuffer(RenderLayer.getBeaconBeam(textureId, true))).push(stack, buffer, 16, ModelVertex.FORMAT);
+            ptr = writeBeamLayerVertices(ptr, poseStack, ColorARGB.toABGR(color, 32), yOffset, height, innerX1, outerZ1, outerRadius, innerZ2, innerX3, outerRadius, outerRadius, outerRadius, innerV1, innerV2);
+            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(resourceLocation, true))).push(stack, buffer, 16, ModelVertex.FORMAT);
         }
-        matrices.pop();
+        poseStack.popPose();
     }
 
     @Unique
-    private static long writeBeamLayerVertices(long ptr, MatrixStack matrixStack, int color, int yOffset, int height, float x1, float z1, float x2, float z2, float x3, float z3, float x4, float z4, float v1, float v2) {
-        MatrixStack.Entry entry = matrixStack.peek();
-        Matrix4f positionMatrix = entry.getPositionMatrix();
-        Matrix3f normalMatrix = entry.getNormalMatrix();
+    private static long writeBeamLayerVertices(long ptr, PoseStack poseStack, int color, int yOffset, int height, float x1, float z1, float x2, float z2, float x3, float z3, float x4, float z4, float v1, float v2) {
+        PoseStack.Pose pose = poseStack.last();
+        Matrix4f positionMatrix = pose.pose();
+        Matrix3f normalMatrix = pose.normal();
 
         var normal = MatrixHelper.transformNormal(normalMatrix, (float) 0.0, (float) 1.0, (float) 0.0);
 
@@ -114,21 +116,21 @@ public abstract class MixinBeaconBlockEntityRenderer {
         float transformedY = MatrixHelper.transformPositionY(positionMatrix, x, y, z);
         float transformedZ = MatrixHelper.transformPositionZ(positionMatrix, x, y, z);
 
-        ModelVertex.write(ptr, transformedX, transformedY, transformedZ, color, u, v, LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, normal);
+        ModelVertex.write(ptr, transformedX, transformedY, transformedZ, color, u, v, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, normal);
         ptr += ModelVertex.STRIDE;
         return ptr;
     }
 
-    @Inject(method = "render(Lnet/minecraft/block/entity/BeaconBlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;II)V", at = @At(value = "HEAD"), cancellable = true)
-    public void render(BeaconBlockEntity beaconBlockEntity, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, int j, CallbackInfo ci) {
-        Frustum frustum = ((WorldRendererAccessor) MinecraftClient.getInstance().worldRenderer).getFrustum();
-        Box box = new Box(
-                beaconBlockEntity.getPos().getX() - 1.0,
-                beaconBlockEntity.getPos().getY() - 1.0,
-                beaconBlockEntity.getPos().getZ() - 1.0,
-                beaconBlockEntity.getPos().getX() + 1.0,
-                beaconBlockEntity.getPos().getY() + (beaconBlockEntity.getBeamSegments().isEmpty() ? 1.0 : 1024.0), // todo: probably want to limit this to max height vanilla overshoots as well
-                beaconBlockEntity.getPos().getZ() + 1.0);
+    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "HEAD"), cancellable = true)
+    public void render(BeaconBlockEntity beaconBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci) {
+        Frustum frustum = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getCullingFrustum();
+        AABB box = new AABB(
+                beaconBlockEntity.getBlockPos().getX() - 1.0,
+                beaconBlockEntity.getBlockPos().getY() - 1.0,
+                beaconBlockEntity.getBlockPos().getZ() - 1.0,
+                beaconBlockEntity.getBlockPos().getX() + 1.0,
+                beaconBlockEntity.getBlockPos().getY() + (beaconBlockEntity.getBeamSections().isEmpty() ? 1.0 : 1024.0), // todo: probably want to limit this to max height vanilla overshoots as well
+                beaconBlockEntity.getBlockPos().getZ() + 1.0);
 
         if (!frustum.isVisible(box)) {
             ci.cancel();

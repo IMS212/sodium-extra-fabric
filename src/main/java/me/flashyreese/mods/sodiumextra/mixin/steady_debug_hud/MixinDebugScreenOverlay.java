@@ -1,9 +1,9 @@
 package me.flashyreese.mods.sodiumextra.mixin.steady_debug_hud;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.DebugHud;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,8 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(DebugHud.class)
-public abstract class MixinDebugHud {
+@Mixin(DebugScreenOverlay.class)
+public abstract class MixinDebugScreenOverlay {
+    @Shadow protected abstract void renderLines(GuiGraphics guiGraphics, List<String> list, boolean bl);
 
     @Unique
     private final List<String> leftTextCache = new ArrayList<>();
@@ -27,13 +28,10 @@ public abstract class MixinDebugHud {
     @Unique
     private boolean rebuild = true;
 
-    @Shadow
-    protected abstract void drawText(DrawContext context, List<String> text, boolean left);
-
     @Inject(method = "render", at = @At(value = "HEAD"))
-    public void preRender(DrawContext context, CallbackInfo ci) {
+    public void preRender(GuiGraphics guiGraphics, CallbackInfo ci) {
         if (SodiumExtraClientMod.options().extraSettings.steadyDebugHud) {
-            final long currentTime = Util.getMeasuringTimeMs();
+            final long currentTime = Util.getMillis();
             if (currentTime > this.nextTime) {
                 this.rebuild = true;
                 this.nextTime = currentTime + (SodiumExtraClientMod.options().extraSettings.steadyDebugHudRefreshInterval * 50L);
@@ -45,21 +43,21 @@ public abstract class MixinDebugHud {
         }
     }
 
-    @Redirect(method = "drawLeftText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/DebugHud;drawText(Lnet/minecraft/client/gui/DrawContext;Ljava/util/List;Z)V"))
-    public void sodiumExtra$redirectDrawLeftText(DebugHud instance, DrawContext context, List<String> text, boolean left) {
+    @Redirect(method = "drawGameInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.leftTextCache.clear();
             this.leftTextCache.addAll(text);
         }
-        this.drawText(context, this.leftTextCache, left);
+        this.renderLines(guiGraphics, this.leftTextCache, left);
     }
 
-    @Redirect(method = "drawRightText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/DebugHud;drawText(Lnet/minecraft/client/gui/DrawContext;Ljava/util/List;Z)V"))
-    public void sodiumExtra$redirectDrawRightText(DebugHud instance, DrawContext context, List<String> text, boolean left) {
+    @Redirect(method = "drawSystemInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.rightTextCache.clear();
             this.rightTextCache.addAll(text);
         }
-        this.drawText(context, this.rightTextCache, left);
+        this.renderLines(guiGraphics, this.rightTextCache, left);
     }
 }

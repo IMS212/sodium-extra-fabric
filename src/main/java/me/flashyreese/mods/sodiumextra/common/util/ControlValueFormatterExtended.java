@@ -1,18 +1,18 @@
 package me.flashyreese.mods.sodiumextra.common.util;
 
+import com.mojang.blaze3d.platform.Monitor;
 import me.jellysquid.mods.sodium.client.gui.options.control.ControlValueFormatter;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Monitor;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 
 public interface ControlValueFormatterExtended extends ControlValueFormatter {
     static ControlValueFormatter resolution() {
-        Monitor monitor = MinecraftClient.getInstance().getWindow().getMonitor();
+        Monitor monitor = Minecraft.getInstance().getWindow().findBestMonitor();
         return (v) -> {
             if (monitor == null) {
-                return Text.translatable("options.fullscreen.unavailable");
+                return Component.translatable("options.fullscreen.unavailable");
             } else {
-                return v == 0 ? Text.translatable("options.fullscreen.current") : Text.literal(monitor.getVideoMode(v - 1).toString());
+                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.getMode(v - 1).toString());
             }
         };
     }
@@ -20,16 +20,16 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
     static ControlValueFormatter fogDistance() {
         return (v) -> {
             if (v == 0) {
-                return Text.translatable("options.gamma.default");
+                return Component.translatable("options.gamma.default");
             } else if (v == 33) {
-                return Text.translatable("options.off");
+                return Component.translatable("options.off");
             } else {
-                return Text.translatable("options.chunks", v);
+                return Component.translatable("options.chunks", v);
             }
         };
     }
 
     static ControlValueFormatter ticks() {
-        return (v) -> Text.translatable("sodium-extra.units.ticks", v);
+        return (v) -> Component.translatable("sodium-extra.units.ticks", v);
     }
 }

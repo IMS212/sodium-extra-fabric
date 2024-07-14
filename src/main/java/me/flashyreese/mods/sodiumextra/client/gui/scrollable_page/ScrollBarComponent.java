@@ -2,8 +2,8 @@ package me.flashyreese.mods.sodiumextra.client.gui.scrollable_page;
 
 import me.jellysquid.mods.sodium.client.gui.widgets.AbstractWidget;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 
 public class ScrollBarComponent extends AbstractWidget {
 
@@ -42,9 +42,9 @@ public class ScrollBarComponent extends AbstractWidget {
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
-        this.drawBorder(drawContext, this.dim.x(), this.dim.y(), this.dim.getLimitX(), this.dim.getLimitY(), 0xFFAAAAAA);
-        this.drawRect(drawContext, this.scrollThumb.x(), this.scrollThumb.y(), this.scrollThumb.getLimitX(), this.scrollThumb.getLimitY(), 0xFFAAAAAA);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        this.drawBorder(guiGraphics, this.dim.x(), this.dim.y(), this.dim.getLimitX(), this.dim.getLimitY(), 0xFFAAAAAA);
+        this.drawRect(guiGraphics, this.scrollThumb.x(), this.scrollThumb.y(), this.scrollThumb.getLimitX(), this.scrollThumb.getLimitY(), 0xFFAAAAAA);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ScrollBarComponent extends AbstractWidget {
     }
 
     private void setOffset(int value) {
-        this.offset = MathHelper.clamp(value, 0, this.maxScrollBarOffset);
+        this.offset = Mth.clamp(value, 0, this.maxScrollBarOffset);
         this.updateThumbPosition();
         this.onSetOffset.run();
     }

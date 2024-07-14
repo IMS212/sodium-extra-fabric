@@ -4,21 +4,25 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gui.options.control.ControlElement;
 import me.jellysquid.mods.sodium.client.gui.widgets.AbstractWidget;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.navigation.GuiNavigation;
-import net.minecraft.client.gui.navigation.GuiNavigationPath;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractFrame extends AbstractWidget implements ParentElement {
+public abstract class AbstractFrame extends AbstractWidget implements ContainerEventHandler {
     protected final Dim2i dim;
     protected final List<AbstractWidget> children = new ArrayList<>();
-    protected final List<Drawable> drawable = new ArrayList<>();
+    protected final List<Renderable> renderable = new ArrayList<>();
     protected final List<ControlElement<?>> controlElements = new ArrayList<>();
-    private Element focused;
+    private GuiEventListener focused;
     private boolean dragging;
 
     public AbstractFrame(Dim2i dim) {
@@ -26,29 +30,29 @@ public abstract class AbstractFrame extends AbstractWidget implements ParentElem
     }
 
     public void buildFrame() {
-        for (Element element : this.children) {
+        for (GuiEventListener element : this.children) {
             if (element instanceof AbstractFrame) {
                 this.controlElements.addAll(((AbstractFrame) element).controlElements);
             }
             if (element instanceof ControlElement<?>) {
                 this.controlElements.add((ControlElement<?>) element);
             }
-            if (element instanceof Drawable) {
-                this.drawable.add((Drawable) element);
+            if (element instanceof Renderable) {
+                this.renderable.add((Renderable) element);
             }
         }
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
-        for (Drawable drawable : this.drawable) {
-            drawable.render(drawContext, mouseX, mouseY, delta);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+        for (Renderable renderable : this.renderable) {
+            renderable.render(guiGraphics, mouseX, mouseY, delta);
         }
     }
 
     public void applyScissor(int x, int y, int width, int height, Runnable action) {
-        double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        RenderSystem.enableScissor((int) (x * scale), (int) (MinecraftClient.getInstance().getWindow().getFramebufferHeight() - (y + height) * scale),
+        double scale = Minecraft.getInstance().getWindow().getGuiScale();
+        RenderSystem.enableScissor((int) (x * scale), (int) (Minecraft.getInstance().getWindow().getHeight() - (y + height) * scale),
                 (int) (width * scale), (int) (height * scale));
         action.run();
         RenderSystem.disableScissor();
@@ -66,17 +70,17 @@ public abstract class AbstractFrame extends AbstractWidget implements ParentElem
 
     @Nullable
     @Override
-    public Element getFocused() {
+    public GuiEventListener getFocused() {
         return this.focused;
     }
 
     @Override
-    public void setFocused(@Nullable Element focused) {
+    public void setFocused(@Nullable GuiEventListener focused) {
         this.focused = focused;
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return this.children;
     }
 
@@ -86,12 +90,12 @@ public abstract class AbstractFrame extends AbstractWidget implements ParentElem
     }
 
     @Override
-    public @Nullable GuiNavigationPath getNavigationPath(GuiNavigation navigation) {
-        return ParentElement.super.getNavigationPath(navigation);
+    public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent navigation) {
+        return ContainerEventHandler.super.nextFocusPath(navigation);
     }
 
     @Override
-    public ScreenRect getNavigationFocus() {
-        return new ScreenRect(this.dim.x(), this.dim.y(), this.dim.width(), this.dim.height());
+    public ScreenRectangle getRectangle() {
+        return new ScreenRectangle(this.dim.x(), this.dim.y(), this.dim.width(), this.dim.height());
     }
 }

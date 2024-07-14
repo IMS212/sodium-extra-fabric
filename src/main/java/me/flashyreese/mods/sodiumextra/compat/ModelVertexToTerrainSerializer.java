@@ -13,7 +13,7 @@ public class ModelVertexToTerrainSerializer implements VertexSerializer {
             MemoryUtil.memCopy(src + 28L, dst + 24L, 8); // Copies light and normal
 
             src += ModelVertex.STRIDE;
-            dst += IrisCompat.getTerrainFormat().getVertexSizeByte();
+            dst += IrisCompat.getTerrainFormat().getVertexSize();
         }
     }
 }

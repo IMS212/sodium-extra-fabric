@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(CloudRenderer.class)
 public class MixinCloudRenderer {
-    @ModifyVariable(method = "render", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/option/GameOptions;getClampedViewDistance()I"), index = 21, name = "renderDistance")
+    @ModifyVariable(method = "render", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I"), index = 21, name = "renderDistance")
     public int modifyCloudRenderDistance(int original) {
         return original * SodiumExtraClientMod.options().extraSettings.cloudDistance / 100;
     }

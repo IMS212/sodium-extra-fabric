@@ -1,14 +1,14 @@
 package me.flashyreese.mods.sodiumextra.client.render.vertex.formats;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
-import net.minecraft.client.render.VertexFormats;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
 public class TextureColorVertex {
-    public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(VertexFormats.POSITION_TEXTURE_COLOR);
+    public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(DefaultVertexFormat.POSITION_TEX_COLOR);
 
     public static final int STRIDE = 24;
 

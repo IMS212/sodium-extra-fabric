@@ -1,22 +1,22 @@
 package me.flashyreese.mods.sodiumextra.mixin.stars;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(WorldRenderer.class)
-public class MixinWorldRenderer {
+@Mixin(LevelRenderer.class)
+public class MixinLevelRenderer {
     @Redirect(
-            method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/render/Camera;ZLjava/lang/Runnable;)V",
+            method = "renderSky",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/world/ClientWorld;getStarBrightness(F)F"
+                    target = "Lnet/minecraft/client/multiplayer/ClientLevel;getStarBrightness(F)F"
             )
     )
-    public float redirectGetStarBrightness(ClientWorld instance, float f) {
+    public float redirectGetStarBrightness(ClientLevel instance, float f) {
         if (SodiumExtraClientMod.options().detailSettings.stars) {
             return instance.getStarBrightness(f);
         } else {

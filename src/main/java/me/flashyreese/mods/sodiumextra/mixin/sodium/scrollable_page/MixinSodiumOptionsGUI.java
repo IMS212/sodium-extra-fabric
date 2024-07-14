@@ -6,9 +6,9 @@ import me.jellysquid.mods.sodium.client.gui.options.OptionPage;
 import me.jellysquid.mods.sodium.client.gui.options.control.ControlElement;
 import me.jellysquid.mods.sodium.client.gui.prompt.ScreenPrompt;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,7 +25,7 @@ public abstract class MixinSodiumOptionsGUI extends Screen {
     @Shadow
     private @Nullable ScreenPrompt prompt;
 
-    protected MixinSodiumOptionsGUI(Text title) {
+    protected MixinSodiumOptionsGUI(Component title) {
         super(title);
     }
 
@@ -35,12 +35,12 @@ public abstract class MixinSodiumOptionsGUI extends Screen {
         int y = 28;
 
         OptionPageScrollFrame optionPageScrollFrame = new OptionPageScrollFrame(new Dim2i(x, y, /*this.width - x * 2*/200, this.height - y - 10 /*- 64*/), this.currentPage);
-        this.addDrawableChild(optionPageScrollFrame);
+        this.addRenderableWidget(optionPageScrollFrame);
         ci.cancel();
     }
 
     @Inject(method = "renderOptionTooltip", at = @At(value = "HEAD"), cancellable = true)
-    private void renderOptionTooltip(DrawContext drawContext, ControlElement<?> element, CallbackInfo ci) {
+    private void renderOptionTooltip(GuiGraphics guiGraphics, ControlElement<?> element, CallbackInfo ci) {
         ci.cancel();
     }
 

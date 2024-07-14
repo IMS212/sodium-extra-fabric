@@ -8,8 +8,8 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.jellysquid.mods.sodium.client.gui.options.TextProvider;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class SodiumExtraGameOptions {
     private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Identifier.class, new Identifier.Serializer())
+            .registerTypeAdapter(ResourceLocation.class, new ResourceLocation.Serializer())
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
@@ -78,14 +78,14 @@ public class SodiumExtraGameOptions {
         BOTTOM_LEFT("sodium-extra.option.overlay_corner.bottom_left"),
         BOTTOM_RIGHT("sodium-extra.option.overlay_corner.bottom_right");
 
-        private final Text text;
+        private final Component text;
 
         OverlayCorner(String text) {
-            this.text = Text.translatable(text);
+            this.text = Component.translatable(text);
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.text;
         }
     }
@@ -95,14 +95,14 @@ public class SodiumExtraGameOptions {
         BACKGROUND("sodium-extra.option.text_contrast.background"),
         SHADOW("sodium-extra.option.text_contrast.shadow");
 
-        private final Text text;
+        private final Component text;
 
         TextContrast(String text) {
-            this.text = Text.translatable(text);
+            this.text = Component.translatable(text);
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.text;
         }
     }
@@ -112,7 +112,7 @@ public class SodiumExtraGameOptions {
         ON("options.on"),
         ADAPTIVE("sodium-extra.option.use_adaptive_sync.name", GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
 
-        private final Text name;
+        private final Component name;
         private final boolean supported;
 
         VerticalSyncOption(String name) {
@@ -120,7 +120,7 @@ public class SodiumExtraGameOptions {
         }
 
         VerticalSyncOption(String name, boolean supported) {
-            this.name = Text.translatable(name);
+            this.name = Component.translatable(name);
             this.supported = supported;
         }
 
@@ -129,7 +129,7 @@ public class SodiumExtraGameOptions {
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.name;
         }
     }
@@ -160,7 +160,7 @@ public class SodiumExtraGameOptions {
         public boolean blockBreak;
         public boolean blockBreaking;
         @SerializedName("other")
-        public Map<Identifier, Boolean> otherMap;
+        public Map<ResourceLocation, Boolean> otherMap;
 
         public ParticleSettings() {
             this.particles = true;
@@ -194,7 +194,7 @@ public class SodiumExtraGameOptions {
         public int fogStart;
         public boolean multiDimensionFogControl;
         @SerializedName("dimensionFogDistance")
-        public Map<Identifier, Integer> dimensionFogDistanceMap;
+        public Map<ResourceLocation, Integer> dimensionFogDistanceMap;
         public boolean lightUpdates;
         public boolean itemFrame;
         public boolean armorStand;

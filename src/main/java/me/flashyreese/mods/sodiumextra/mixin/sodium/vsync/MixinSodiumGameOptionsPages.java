@@ -9,7 +9,7 @@ import me.jellysquid.mods.sodium.client.gui.options.OptionImpact;
 import me.jellysquid.mods.sodium.client.gui.options.OptionImpl;
 import me.jellysquid.mods.sodium.client.gui.options.control.CyclingControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,34 +24,34 @@ public class MixinSodiumGameOptionsPages {
 
     @Redirect(method = "general", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;add(Lme/jellysquid/mods/sodium/client/gui/options/Option;)Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;", ordinal = 5), remap = false)
     private static OptionGroup.Builder redirectVsyncToggle(OptionGroup.Builder instance, Option<?> option) {
-        if (!option.getTooltip().getString().equals(Text.translatable("sodium.options.v_sync.tooltip").getString())) {
+        if (!option.getTooltip().getString().equals(Component.translatable("sodium.options.v_sync.tooltip").getString())) {
             return instance.add(option);
         }
         return instance.add(OptionImpl.createBuilder(SodiumExtraGameOptions.VerticalSyncOption.class, SodiumExtraGameOptionPages.sodiumExtraOpts)
-                .setName(Text.translatable("options.vsync"))
-                .setTooltip(Text.literal(Text.translatable("sodium.options.v_sync.tooltip").getString() + "\n- " + Text.translatable("sodium-extra.option.use_adaptive_sync.name").getString() + ": " + Text.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
+                .setName(Component.translatable("options.vsync"))
+                .setTooltip(Component.literal(Component.translatable("sodium.options.v_sync.tooltip").getString() + "\n- " + Component.translatable("sodium-extra.option.use_adaptive_sync.name").getString() + ": " + Component.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
                 .setControl((opt) -> new CyclingControl<>(opt, SodiumExtraGameOptions.VerticalSyncOption.class,
                         SodiumExtraGameOptions.VerticalSyncOption.getAvailableOptions()))
                 .setBinding((opts, value) -> {
                     switch (value) {
                         case OFF -> {
                             opts.extraSettings.useAdaptiveSync = false;
-                            vanillaOpts.getData().getEnableVsync().setValue(false);
+                            vanillaOpts.getData().enableVsync().set(false);
                         }
                         case ON -> {
                             opts.extraSettings.useAdaptiveSync = false;
-                            vanillaOpts.getData().getEnableVsync().setValue(true);
+                            vanillaOpts.getData().enableVsync().set(true);
                         }
                         case ADAPTIVE -> {
                             opts.extraSettings.useAdaptiveSync = true;
-                            vanillaOpts.getData().getEnableVsync().setValue(true);
+                            vanillaOpts.getData().enableVsync().set(true);
                         }
                     }
                     vanillaOpts.save();
                 }, opts -> {
-                    if (vanillaOpts.getData().getEnableVsync().getValue() && !opts.extraSettings.useAdaptiveSync) {
+                    if (vanillaOpts.getData().enableVsync().get() && !opts.extraSettings.useAdaptiveSync) {
                         return SodiumExtraGameOptions.VerticalSyncOption.ON;
-                    } else if (!vanillaOpts.getData().getEnableVsync().getValue() && !opts.extraSettings.useAdaptiveSync) {
+                    } else if (!vanillaOpts.getData().enableVsync().get() && !opts.extraSettings.useAdaptiveSync) {
                         return SodiumExtraGameOptions.VerticalSyncOption.OFF;
                     } else {
                         return SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE;

@@ -13,7 +13,7 @@ public class ClientTickHandler {
 
     public void onClientInitialize() {
         ClientTickEvents.START_CLIENT_TICK.register(minecraftClient -> {
-            int currentFPS = MinecraftClientAccessor.getCurrentFPS();
+            int currentFPS = MinecraftClientAccessor.getFPS();
             this.fpsQueue.add(currentFPS);
             this.averageFps = (int) this.fpsQueue.stream().mapToInt(Integer::intValue).average().orElse(0);
             this.lowestFps = this.fpsQueue.stream().min(Comparator.comparingInt(e -> e)).orElse(0);

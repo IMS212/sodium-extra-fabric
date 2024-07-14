@@ -1,5 +1,6 @@
 package me.flashyreese.mods.sodiumextra.mixin.optimizations.beacon_beam_rendering;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import me.flashyreese.mods.sodiumextra.compat.IrisCompat;
 import me.flashyreese.mods.sodiumextra.compat.ModelVertexToTerrainSerializer;
@@ -7,7 +8,6 @@ import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializ
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
-import net.minecraft.client.render.VertexFormats;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,7 +30,7 @@ public class MixinVertexSerializerRegistryImpl {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void putSerializerIris(CallbackInfo ci) {
         if (IrisCompat.isIrisPresent()) {
-            this.cache.put(createKey(VertexFormatRegistry.instance().get(VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL), VertexFormatRegistry.instance().get(IrisCompat.getTerrainFormat())), new ModelVertexToTerrainSerializer());
+            this.cache.put(createKey(VertexFormatRegistry.instance().get(DefaultVertexFormat.NEW_ENTITY), VertexFormatRegistry.instance().get(IrisCompat.getTerrainFormat())), new ModelVertexToTerrainSerializer());
         }
     }
 }

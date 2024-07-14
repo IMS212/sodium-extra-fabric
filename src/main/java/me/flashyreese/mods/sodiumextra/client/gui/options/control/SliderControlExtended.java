@@ -5,9 +5,9 @@ import me.jellysquid.mods.sodium.client.gui.options.control.Control;
 import me.jellysquid.mods.sodium.client.gui.options.control.ControlElement;
 import me.jellysquid.mods.sodium.client.gui.options.control.ControlValueFormatter;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.apache.commons.lang3.Validate;
 
 public class SliderControlExtended implements Control<Integer> {
@@ -76,29 +76,29 @@ public class SliderControlExtended implements Control<Integer> {
         }
 
         @Override
-        public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
-            super.render(drawContext, mouseX, mouseY, delta);
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+            super.render(guiGraphics, mouseX, mouseY, delta);
 
             if (this.option.isAvailable() && this.hovered) {
-                this.renderSlider(drawContext);
+                this.renderSlider(guiGraphics);
             } else {
-                this.renderStandaloneValue(drawContext);
+                this.renderStandaloneValue(guiGraphics);
             }
         }
 
-        private void renderStandaloneValue(DrawContext drawContext) {
+        private void renderStandaloneValue(GuiGraphics guiGraphics) {
             int sliderX = this.getSliderBounds().x();
             int sliderY = this.getSliderBounds().y();
             int sliderWidth = this.getSliderBounds().width();
             int sliderHeight = this.getSliderBounds().height();
 
-            Text label = this.formatter.format(this.option.getValue());
-            int labelWidth = this.font.getWidth(label);
+            Component label = this.formatter.format(this.option.getValue());
+            int labelWidth = this.font.width(label);
 
-            this.drawString(drawContext, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
+            this.drawString(guiGraphics, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
         }
 
-        private void renderSlider(DrawContext drawContext) {
+        private void renderSlider(GuiGraphics guiGraphics) {
             int sliderX = this.getSliderBounds().x();
             int sliderY = this.getSliderBounds().y();
             int sliderWidth = this.getSliderBounds().width();
@@ -106,19 +106,19 @@ public class SliderControlExtended implements Control<Integer> {
 
             this.thumbPosition = this.getThumbPositionForValue(option.getValue());
 
-            double thumbOffset = MathHelper.clamp((double) (this.getIntValue() - this.min) / this.range * sliderWidth, 0, sliderWidth);
+            double thumbOffset = Mth.clamp((double) (this.getIntValue() - this.min) / this.range * sliderWidth, 0, sliderWidth);
 
             double thumbX = sliderX + thumbOffset - THUMB_WIDTH;
             double trackY = sliderY + (sliderHeight / 2) - ((double) TRACK_HEIGHT / 2);
 
-            this.drawRect(drawContext, (int) thumbX, sliderY, (int) (thumbX + (THUMB_WIDTH * 2)), sliderY + sliderHeight, 0xFFFFFFFF);
-            this.drawRect(drawContext, sliderX, (int) trackY, sliderX + sliderWidth, (int) (trackY + TRACK_HEIGHT), 0xFFFFFFFF);
+            this.drawRect(guiGraphics, (int) thumbX, sliderY, (int) (thumbX + (THUMB_WIDTH * 2)), sliderY + sliderHeight, 0xFFFFFFFF);
+            this.drawRect(guiGraphics, sliderX, (int) trackY, sliderX + sliderWidth, (int) (trackY + TRACK_HEIGHT), 0xFFFFFFFF);
 
-            Text label = this.displayIntValueWhileSliding ? Text.of(String.valueOf(this.getIntValue())) : this.formatter.format(this.option.getValue());
+            Component label = this.displayIntValueWhileSliding ? Component.literal(String.valueOf(this.getIntValue())) : this.formatter.format(this.option.getValue());
 
-            int labelWidth = this.font.getWidth(label);
+            int labelWidth = this.font.width(label);
 
-            this.drawString(drawContext, label, sliderX - labelWidth - 6, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
+            this.drawString(guiGraphics, label, sliderX - labelWidth - 6, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
         }
 
         public int getIntValue() {
@@ -149,7 +149,7 @@ public class SliderControlExtended implements Control<Integer> {
         }
 
         private void setValue(double d) {
-            this.thumbPosition = MathHelper.clamp(d, 0.0D, 1.0D);
+            this.thumbPosition = Mth.clamp(d, 0.0D, 1.0D);
 
             int value = this.getIntValue();
 
