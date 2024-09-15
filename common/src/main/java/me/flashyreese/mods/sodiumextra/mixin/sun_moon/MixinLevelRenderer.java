@@ -1,5 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.sun_moon;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -26,16 +28,16 @@ public class MixinLevelRenderer {
     @Final
     private static ResourceLocation MOON_LOCATION;
 
-    @Redirect(
+    @WrapOperation(
             method = "renderSky",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"
             )
     )
-    public float[] redirectGetFogColorOverride(DimensionSpecialEffects instance, float skyAngle, float tickDelta) {
+    public float[] redirectGetFogColorOverride(DimensionSpecialEffects instance, float skyAngle, float tickDelta, Operation<float[]> original) {
         if (SodiumExtraClientMod.options().detailSettings.sunMoon) {
-            return instance.getSunriseColor(skyAngle, tickDelta);
+            return original.call(instance, skyAngle, tickDelta);
         } else {
             return null;
         }

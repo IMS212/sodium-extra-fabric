@@ -107,7 +107,7 @@ public class OptionPageScrollFrame extends AbstractFrame {
         int textPadding = 3;
         int boxPadding = 3;
 
-        int boxWidth = 200;
+        int boxWidth = 240;
 
         int boxY = Math.max(dim.y(), this.dim.y());
         int boxX = this.dim.getLimitX() + boxPadding;

@@ -34,7 +34,7 @@ public abstract class MixinSodiumOptionsGUI extends Screen {
         int x = 6;
         int y = 28;
 
-        OptionPageScrollFrame optionPageScrollFrame = new OptionPageScrollFrame(new Dim2i(x, y, /*this.width - x * 2*/200, this.height - y - 10 /*- 64*/), this.currentPage);
+        OptionPageScrollFrame optionPageScrollFrame = new OptionPageScrollFrame(new Dim2i(x, y, /*this.width - x * 2*/240, this.height - y - 10 /*- 64*/), this.currentPage);
         this.addRenderableWidget(optionPageScrollFrame);
         ci.cancel();
     }

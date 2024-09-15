@@ -41,7 +41,6 @@
     "sodium.accessibility.MixinSodiumGameOptionPages",
     "sodium.cloud.MixinCloudRenderer",
     "sodium.fog.MixinOcclusionCuller",
-    "sodium.resolution.MixinSodiumGameOptionPages",
     "sodium.scrollable_page.MixinSodiumOptionsGUI",
     "sodium.vsync.MixinSodiumGameOptionsPages",
     "stars.MixinLevelRenderer",
